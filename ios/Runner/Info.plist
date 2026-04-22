@@ -45,5 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <!-- Reverse client ID de ton OAuth iOS -->
+          <string>com.googleusercontent.apps.XXXXXX-XXXXXXX</string>
+          <!-- Deep link scheme de ton app -->
+          <string>com.example.myapp</string>
+        </array>
+      </dict>
+    </array>
 </dict>
 </plist>
