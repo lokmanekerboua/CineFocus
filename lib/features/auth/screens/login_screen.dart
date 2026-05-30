@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../services/auth_service.dart';
 
@@ -222,7 +223,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
                   )
-                      : Icon(Icons.g_mobiledata, size: 28, color: colorScheme.primary),
+                      : SvgPicture.asset('assets/google_logo.svg', height: 28,),
                   label: const Text("Sign in with Google"),
                 ),
 

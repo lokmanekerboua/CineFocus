@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../services/auth_service.dart';
@@ -281,7 +282,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     width: 20,
                     child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
                   )
-                      : Icon(Icons.g_mobiledata, size: 28, color: colorScheme.primary),
+                      : SvgPicture.asset('assets/google_logo.svg', height: 28,),
                   label: const Text("Sign up with Google"),
                 ),
                 const SizedBox(height: 24),
