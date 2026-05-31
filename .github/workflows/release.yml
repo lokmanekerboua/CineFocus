@@ -11,6 +11,8 @@ jobs:
     name: Build APK
     runs-on: ubuntu-latest
     environment: SUPABASE_URL
+    outputs:
+      version: ${{ steps.pubspec_version.outputs.VERSION }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,6 +28,12 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Get version from pubspec
+        id: pubspec_version
+        run: |
+          VERSION=$(grep 'version: ' pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Validate Secrets
         run: |
@@ -78,27 +86,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get version from pubspec
-        id: pubspec_version
-        run: |
-          VERSION=$(grep 'version: ' pubspec.yaml | sed 's/version: //')
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Download APK Artifact
         uses: actions/download-artifact@v4
         with:
           name: release-apk
+          path: .
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.pubspec_version.outputs.VERSION }}
-          name: Release v${{ steps.pubspec_version.outputs.VERSION }}
+          tag_name: v${{ needs.build.outputs.version }}
+          name: Release v${{ needs.build.outputs.version }}
           draft: false
           prerelease: false
           files: app-release.apk
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
