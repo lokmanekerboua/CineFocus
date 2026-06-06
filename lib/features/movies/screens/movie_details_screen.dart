@@ -29,7 +29,11 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final trailerAsync = ref.watch(trailerKeyProvider(widget.movie.id));
+    
+    // Fix: Using the expected Record argument for the family provider
+    final trailerAsync = ref.watch(
+      trailerKeyProvider((id: widget.movie.id, isTV: widget.movie.isTV)),
+    );
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -62,9 +66,9 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
                       child: CachedNetworkImage(
                         imageUrl: "${ApiConstants.backdropBaseUrl}${widget.movie.backdropPath}",
                         fit: BoxFit.cover,
+                        errorWidget: (context, url, error) => Container(color: colorScheme.surface),
                       ),
                     ),
-                    // Gradient overlay for better text visibility and matching theme
                     DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -121,15 +125,27 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
                             ],
                           ),
                         ),
+                        if (widget.movie.ageRating != null && widget.movie.ageRating!.isNotEmpty) ...[
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: Colors.white24),
+                            ),
+                            child: Text(
+                              widget.movie.ageRating!,
+                              style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                         const SizedBox(width: 12),
                         Text(
-                          widget.movie.releaseDate.split('-').first,
+                          widget.movie.releaseDate.isNotEmpty 
+                            ? widget.movie.releaseDate.split('-').first 
+                            : 'N/A',
                           style: const TextStyle(color: Colors.white60, fontSize: 16),
                         ),
-                        const SizedBox(width: 12),
-                        const Text("•", style: TextStyle(color: Colors.white24)),
-                        const SizedBox(width: 12),
-                        const Text("Action, Drama", style: TextStyle(color: Colors.white60)),
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -213,7 +229,7 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),

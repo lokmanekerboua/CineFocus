@@ -5,19 +5,24 @@ import '../models/movie_model.dart';
 
 final movieServiceProvider = Provider((ref) => MovieService());
 
-final trendingMoviesProvider = FutureProvider<List<Movie>>((ref) async {
-  return ref.watch(movieServiceProvider).getTrendingMovies();
+// Simplified argument for detail-related providers
+typedef ContentArgs = ({int id, bool isTV});
+
+final trailerKeyProvider = FutureProvider.family<String?, ContentArgs>((ref, args) async {
+  return ref.watch(movieServiceProvider).getYoutubeTrailerKey(args.id, isTV: args.isTV);
 });
 
-final trailerKeyProvider = FutureProvider.family<String?, int>((ref, movieId) async {
-  return ref.watch(movieServiceProvider).getYoutubeTrailerKey(movieId);
+final castProvider = FutureProvider.family<List<Map<String, dynamic>>, ContentArgs>((ref, args) async {
+  return ref.watch(movieServiceProvider).getCast(args.id, args.isTV);
 });
 
-// Using Notifier instead of StateProvider for Riverpod 3.x compatibility
+final similarContentProvider = FutureProvider.family<List<Movie>, ContentArgs>((ref, args) async {
+  return ref.watch(movieServiceProvider).getSimilar(args.id, args.isTV);
+});
+
 class SearchQueryNotifier extends Notifier<String> {
   @override
   String build() => '';
-
   set state(String value) => super.state = value;
 }
 
@@ -26,7 +31,6 @@ final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(Search
 class MovieFiltersNotifier extends Notifier<Map<String, dynamic>> {
   @override
   Map<String, dynamic> build() => {};
-
   set state(Map<String, dynamic> value) => super.state = value;
 }
 
@@ -47,11 +51,24 @@ class MoviesNotifier extends AsyncNotifier<List<Movie>> {
   }
 
   Future<List<Movie>> _fetchMovies(int page, String query, Map<String, dynamic> filters) async {
+    List<Movie> movies;
     if (query.isNotEmpty) {
-      return ref.read(movieServiceProvider).searchMovies(query: query, page: page);
+      movies = await ref.read(movieServiceProvider).searchMovies(query: query, page: page);
     } else {
-      return ref.read(movieServiceProvider).discoverMovies(page: page, filters: filters);
+      movies = await ref.read(movieServiceProvider).discoverMovies(page: page, filters: filters);
     }
+
+    // Fetch age ratings for movies as well for consistency
+    final moviesWithRatings = await Future.wait(movies.map((movie) async {
+      try {
+        final rating = await ref.read(movieServiceProvider).getAgeRating(movie.id, false);
+        return movie.copyWith(ageRating: rating);
+      } catch (_) {
+        return movie;
+      }
+    }));
+
+    return moviesWithRatings;
   }
 
   Future<void> fetchNextPage() async {
@@ -71,8 +88,8 @@ class MoviesNotifier extends AsyncNotifier<List<Movie>> {
       } else {
         state = AsyncData([...currentState, ...nextMovies]);
       }
-    } catch (e, st) {
-      debugPrint('Pagination error: $e');
+    } catch (e) {
+      debugPrint('Movie Pagination error: $e');
     } finally {
       _isFetching = false;
     }

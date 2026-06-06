@@ -4,32 +4,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/movie_provider.dart';
+import '../../movies/providers/movie_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../main_screen.dart';
+import '../providers/tv_provider.dart';
 
-class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+class TVHomeScreen extends ConsumerStatefulWidget {
+  const TVHomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<TVHomeScreen> createState() => _TVHomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _TVHomeScreenState extends ConsumerState<TVHomeScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
 
   final List<Map<String, dynamic>> _filterCategories = [
-    {'label': '🔥 Popular', 'filter': {'sort_by': 'popularity.desc'}},
-    {'label': '⭐ Top Rated', 'filter': {'vote_average.gte': 8.0, 'vote_count.gte': 1000}},
-    {'label': '📅 Newest', 'filter': {'sort_by': 'primary_release_date.desc'}},
-    {'label': '🔫 Action', 'filter': {'with_genres': '28'}},
+    {'label': '🔥 Popular', 'filter': {'list_type': 'popular'}},
+    {'label': '⭐ Top Rated', 'filter': {'list_type': 'top_rated'}},
+    {'label': '📺 Airing Today', 'filter': {'list_type': 'airing_today'}},
+    {'label': '📅 On The Air', 'filter': {'list_type': 'on_the_air'}},
+    {'label': '🔫 Action', 'filter': {'with_genres': '10759'}},
     {'label': '😂 Comedy', 'filter': {'with_genres': '35'}},
-    {'label': '👻 Horror', 'filter': {'with_genres': '27'}},
-    {'label': '🧪 Sci-Fi', 'filter': {'with_genres': '878'}},
+    {'label': '🧪 Sci-Fi', 'filter': {'with_genres': '10765'}},
     {'label': '🎭 Drama', 'filter': {'with_genres': '18'}},
   ];
 
@@ -49,7 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 400) {
-      ref.read(moviesProvider.notifier).fetchNextPage();
+      ref.read(tvShowsProvider.notifier).fetchNextPage();
     }
   }
 
@@ -57,9 +58,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 600), () {
       if (query.isNotEmpty) {
-        ref.read(movieFiltersProvider.notifier).state = {};
+        ref.read(tvFiltersProvider.notifier).state = {};
       }
-      ref.read(searchQueryProvider.notifier).state = query;
+      ref.read(tvSearchQueryProvider.notifier).state = query;
     });
   }
 
@@ -67,9 +68,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final moviesAsync = ref.watch(moviesProvider);
+    final tvShowsAsync = ref.watch(tvShowsProvider);
     final user = ref.watch(userProvider);
-    final activeFilters = ref.watch(movieFiltersProvider);
+    final activeFilters = ref.watch(tvFiltersProvider);
     final String? avatarUrl = user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
 
     return Scaffold(
@@ -116,7 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         onChanged: _onSearchChanged,
                         style: const TextStyle(color: Colors.white, fontSize: 16),
                         decoration: InputDecoration(
-                          hintText: 'Search movies...',
+                          hintText: 'Search TV shows...',
                           hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
                           prefixIcon: Icon(Icons.search, color: colorScheme.primary.withOpacity(0.5)),
                           border: InputBorder.none,
@@ -173,8 +174,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onSelected: (selected) {
                             if (selected) {
                               _searchController.clear();
-                              ref.read(searchQueryProvider.notifier).state = '';
-                              ref.read(movieFiltersProvider.notifier).state = item['filter'];
+                              ref.read(tvSearchQueryProvider.notifier).state = '';
+                              ref.read(tvFiltersProvider.notifier).state = item['filter'];
                             }
                           },
                           backgroundColor: Colors.white.withOpacity(0.05),
@@ -197,18 +198,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             ),
-            moviesAsync.when(
-              data: (movies) {
-                if (movies.isEmpty) {
+            tvShowsAsync.when(
+              data: (shows) {
+                if (shows.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.movie_outlined, size: 64, color: colorScheme.primary.withOpacity(0.2)),
+                          Icon(Icons.tv_outlined, size: 64, color: colorScheme.primary.withOpacity(0.2)),
                           const SizedBox(height: 16),
-                          Text("No movies found", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18)),
+                          Text("No TV shows found", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18)),
                         ],
                       ),
                     ),
@@ -225,9 +226,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        return _MovieCard(movie: movies[index]);
+                        return _TVCard(show: shows[index]);
                       },
-                      childCount: movies.length,
+                      childCount: shows.length,
                     ),
                   ),
                 );
@@ -241,7 +242,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Center(child: CircularProgressIndicator(color: colorScheme.primary)),
               ),
             ),
-            if (moviesAsync.isLoading && moviesAsync.hasValue)
+            if (tvShowsAsync.isLoading && tvShowsAsync.hasValue)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32),
@@ -258,18 +259,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _MovieCard extends StatelessWidget {
-  final dynamic movie;
-  const _MovieCard({required this.movie});
+class _TVCard extends StatelessWidget {
+  final dynamic show;
+  const _TVCard({required this.show});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return GestureDetector(
-      onTap: () => context.push('/details', extra: movie),
+      onTap: () => context.push('/details', extra: show),
       child: Hero(
-        tag: 'movie-${movie.id}',
+        tag: 'movie-${show.id}',
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
@@ -287,7 +288,7 @@ class _MovieCard extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 CachedNetworkImage(
-                  imageUrl: "${ApiConstants.imageBaseUrl}${movie.posterPath}",
+                  imageUrl: "${ApiConstants.imageBaseUrl}${show.posterPath}",
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: colorScheme.surface,
@@ -299,7 +300,7 @@ class _MovieCard extends StatelessWidget {
                   ),
                 ),
                 // Age Rating Badge
-                if (movie.ageRating != null && movie.ageRating!.isNotEmpty)
+                if (show.ageRating != null && show.ageRating.isNotEmpty)
                   Positioned(
                     top: 10,
                     right: 10,
@@ -311,7 +312,7 @@ class _MovieCard extends StatelessWidget {
                         border: Border.all(color: colorScheme.primary.withOpacity(0.5)),
                       ),
                       child: Text(
-                        movie.ageRating!,
+                        show.ageRating,
                         style: TextStyle(
                           color: colorScheme.primary,
                           fontSize: 10,
@@ -342,7 +343,7 @@ class _MovieCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          movie.title,
+                          show.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.poppins(
@@ -357,7 +358,7 @@ class _MovieCard extends StatelessWidget {
                             Icon(Icons.star_rounded, color: colorScheme.primary, size: 16),
                             const SizedBox(width: 4),
                             Text(
-                              movie.voteAverage.toStringAsFixed(1),
+                              show.voteAverage.toStringAsFixed(1),
                               style: TextStyle(
                                 color: colorScheme.primary,
                                 fontSize: 12,
@@ -365,9 +366,9 @@ class _MovieCard extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
-                            if (movie.releaseDate.isNotEmpty)
+                            if (show.releaseDate.isNotEmpty)
                               Text(
-                                movie.releaseDate.split('-').first,
+                                show.releaseDate.split('-').first,
                                 style: const TextStyle(color: Colors.white60, fontSize: 11),
                               ),
                           ],

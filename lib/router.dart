@@ -4,8 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
-import 'features/auth/screens/profile_screen.dart';
-import 'features/movies/screens/home_screen.dart';
+import 'features/main_screen.dart';
 import 'features/movies/screens/movie_details_screen.dart';
 import 'features/movies/models/movie_model.dart';
 
@@ -30,7 +29,6 @@ class GoRouterRefreshStream extends ChangeNotifier {
 final router = GoRouter(
   initialLocation: Supabase.instance.client.auth.currentSession != null ? '/home' : '/login',
   
-  // This is the key: it tells GoRouter to re-run the redirect logic whenever auth changes
   refreshListenable: GoRouterRefreshStream(Supabase.instance.client.auth.onAuthStateChange),
   
   redirect: (context, state) {
@@ -38,11 +36,9 @@ final router = GoRouter(
     final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/signup';
 
     if (session == null) {
-      // Not logged in -> force login unless already on login/signup
       return isLoggingIn ? null : '/login';
     }
 
-    // Logged in -> prevent going to login/signup pages
     if (isLoggingIn) {
       return '/home';
     }
@@ -53,8 +49,7 @@ final router = GoRouter(
   routes: [
     GoRoute(path: '/login',  builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
-    GoRoute(path: '/home',   builder: (context, state) => const HomeScreen()),
-    GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+    GoRoute(path: '/home',   builder: (context, state) => const MainScreen()),
     GoRoute(
       path: '/details',
       builder: (context, state) => MovieDetailsScreen(movie: state.extra as Movie),
