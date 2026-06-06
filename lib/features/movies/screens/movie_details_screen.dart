@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/movie_model.dart';
 import '../providers/movie_provider.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/theme/app_theme.dart';
 
 class MovieDetailsScreen extends ConsumerStatefulWidget {
   final Movie movie;
@@ -25,67 +27,199 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final trailerAsync = ref.watch(trailerKeyProvider(widget.movie.id));
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 400,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: 'movie-${widget.movie.id}',
-                child: CachedNetworkImage(
-                  imageUrl: "${ApiConstants.backdropBaseUrl}${widget.movie.backdropPath}",
-                  fit: BoxFit.cover,
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: AppTheme.moodyGradientBackground,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              pinned: true,
+              expandedHeight: 450,
+              leading: Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: 'movie-${widget.movie.id}',
+                      child: CachedNetworkImage(
+                        imageUrl: "${ApiConstants.backdropBaseUrl}${widget.movie.backdropPath}",
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    // Gradient overlay for better text visibility and matching theme
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            colorScheme.surface,
+                            colorScheme.surface.withOpacity(0.5),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.4, 1.0],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.movie.title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text("${widget.movie.voteAverage} | ${widget.movie.releaseDate}"),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text("Overview", style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 8),
-                  Text(widget.movie.overview, style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white70)),
-                  const SizedBox(height: 32),
-                  Text("Trailer", style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 16),
-                  trailerAsync.when(
-                    data: (key) {
-                      if (key == null) return const Text("No trailer available");
-                      _controller ??= YoutubePlayerController(
-                        initialVideoId: key,
-                        flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
-                      );
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: YoutubePlayer(controller: _controller!),
-                      );
-                    },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (_, __) => const Text("Error loading trailer"),
-                  ),
-                  const SizedBox(height: 50),
-                ],
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.movie.title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.star_rounded, color: colorScheme.primary, size: 20),
+                              const SizedBox(width: 4),
+                              Text(
+                                widget.movie.voteAverage.toStringAsFixed(1),
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          widget.movie.releaseDate.split('-').first,
+                          style: const TextStyle(color: Colors.white60, fontSize: 16),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text("•", style: TextStyle(color: Colors.white24)),
+                        const SizedBox(width: 12),
+                        const Text("Action, Drama", style: TextStyle(color: Colors.white60)),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      "Overview",
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.movie.overview,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: Colors.white.withOpacity(0.7),
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Trailer",
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (trailerAsync.hasValue && trailerAsync.value != null)
+                          Icon(Icons.play_circle_fill_rounded, color: colorScheme.primary, size: 28),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withOpacity(0.1),
+                            blurRadius: 20,
+                            spreadRadius: -5,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: trailerAsync.when(
+                          data: (key) {
+                            if (key == null) {
+                              return Container(
+                                height: 200,
+                                color: Colors.white.withOpacity(0.05),
+                                child: const Center(
+                                  child: Text("No trailer available", style: TextStyle(color: Colors.white38)),
+                                ),
+                              );
+                            }
+                            _controller ??= YoutubePlayerController(
+                              initialVideoId: key,
+                              flags: const YoutubePlayerFlags(autoPlay: false, mute: false),
+                            );
+                            return YoutubePlayer(
+                              controller: _controller!,
+                              progressIndicatorColor: colorScheme.primary,
+                            );
+                          },
+                          loading: () => Container(
+                            height: 200,
+                            color: Colors.white.withOpacity(0.05),
+                            child: Center(child: CircularProgressIndicator(color: colorScheme.primary)),
+                          ),
+                          error: (_, __) => Container(
+                            height: 200,
+                            color: Colors.white.withOpacity(0.05),
+                            child: const Center(child: Text("Error loading trailer")),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 60),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
