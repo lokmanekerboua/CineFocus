@@ -5,7 +5,6 @@ import '../models/movie_model.dart';
 
 final movieServiceProvider = Provider((ref) => MovieService());
 
-// Simplified argument for detail-related providers
 typedef ContentArgs = ({int id, bool isTV});
 
 final trailerKeyProvider = FutureProvider.family<String?, ContentArgs>((ref, args) async {
@@ -58,7 +57,6 @@ class MoviesNotifier extends AsyncNotifier<List<Movie>> {
       movies = await ref.read(movieServiceProvider).discoverMovies(page: page, filters: filters);
     }
 
-    // Fetch age ratings for movies as well for consistency
     final moviesWithRatings = await Future.wait(movies.map((movie) async {
       try {
         final rating = await ref.read(movieServiceProvider).getAgeRating(movie.id, false);

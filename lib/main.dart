@@ -12,7 +12,6 @@ final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
   await dotenv.load(fileName: ".env");
 
   await Supabase.initialize(

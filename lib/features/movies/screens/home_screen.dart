@@ -249,7 +249,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
             const SliverToBoxAdapter(
-              child: SizedBox(height: 100), // Spacing for floating bottom bar
+              child: SizedBox(height: 100),
             ),
           ],
         ),
@@ -298,7 +298,6 @@ class _MovieCard extends StatelessWidget {
                     child: const Icon(Icons.movie, color: Colors.white24),
                   ),
                 ),
-                // Age Rating Badge
                 if (movie.ageRating != null && movie.ageRating!.isNotEmpty)
                   Positioned(
                     top: 10,

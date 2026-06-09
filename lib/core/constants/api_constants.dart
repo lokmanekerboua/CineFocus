@@ -3,14 +3,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ApiConstants {
   static String get apiKey {
-    // Check multiple possible keys in .env
     final key = dotenv.env['TMDB_API_KEY'] ?? 
                 dotenv.env['API_KEY'] ?? 
                 dotenv.env['tmdb_api_key'];
 
     if (key == null || key.isEmpty) {
       debugPrint('❌ API_ERROR: TMDB_API_KEY not found in .env');
-      return 'b577c13bfefab17dbfc6c0c160cdc868'; // Fallback
+      return 'b577c13bfefab17dbfc6c0c160cdc868';
     }
 
     if (kDebugMode) {

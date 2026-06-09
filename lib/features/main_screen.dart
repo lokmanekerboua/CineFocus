@@ -28,7 +28,7 @@ class MainScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      extendBody: true, // Content flows behind the bar
+      extendBody: true,
       body: IndexedStack(
         index: selectedIndex,
         children: pages,

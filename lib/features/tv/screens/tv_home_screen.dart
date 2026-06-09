@@ -250,7 +250,7 @@ class _TVHomeScreenState extends ConsumerState<TVHomeScreen> {
                 ),
               ),
             const SliverToBoxAdapter(
-              child: SizedBox(height: 100), // Spacing for floating bottom bar
+              child: SizedBox(height: 100),
             ),
           ],
         ),
@@ -299,7 +299,6 @@ class _TVCard extends StatelessWidget {
                     child: const Icon(Icons.movie, color: Colors.white24),
                   ),
                 ),
-                // Age Rating Badge
                 if (show.ageRating != null && show.ageRating.isNotEmpty)
                   Positioned(
                     top: 10,

@@ -2,17 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // ─── Palette (Inspired by the Teal Moody Design) ──────────────────────────
   static const Color _primaryTeal = Color(0xFF00F2CC);
   static const Color _accentTeal = Color(0xFF00D7C3);
   static const Color _darkBg = Color(0xFF080E11);
   static const Color _darkSurface = Color(0xFF121E21);
   static const Color _darkCard = Color(0xFF17262B);
-  static const Color _darkBorder = Color(0x3300F2CC); // Teal with 20% opacity
+  static const Color _darkBorder = Color(0x3300F2CC);
   static const Color _textPrimary = Colors.white;
   static const Color _textSecondary = Color(0xFF94A3B8);
 
-  // ─── Radius ────────────────────────────────────────────────────────────────
   static final BorderRadius _cardRadius = BorderRadius.circular(32);
   static final BorderRadius _buttonRadius = BorderRadius.circular(16);
 
@@ -36,7 +34,6 @@ class AppTheme {
         bodyMedium: const TextStyle(color: _textSecondary),
       ),
 
-      // AppBar
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -48,7 +45,6 @@ class AppTheme {
         ),
       ),
 
-      // Cards with Glow-ready style
       cardTheme: CardThemeData(
         color: _darkCard,
         elevation: 0,
@@ -59,7 +55,6 @@ class AppTheme {
         clipBehavior: Clip.antiAlias,
       ),
 
-      // Buttons
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: _primaryTeal,
@@ -72,7 +67,6 @@ class AppTheme {
         ),
       ),
 
-      // Inputs
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white.withOpacity(0.05),
@@ -93,7 +87,6 @@ class AppTheme {
         prefixIconColor: _textSecondary,
       ),
 
-      // Bottom Navigation
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: _darkBg,
         selectedItemColor: _primaryTeal,
@@ -103,22 +96,20 @@ class AppTheme {
     );
   }
 
-  // Helper for that specific background gradient/glow
   static BoxDecoration get moodyGradientBackground {
     return const BoxDecoration(
       gradient: RadialGradient(
         center: Alignment(-0.3, -0.4),
         radius: 1.5,
         colors: [
-          Color(0xFF0D3B36), // More pronounced teal glow
-          Color(0xFF080E11), // Deep dark background
+          Color(0xFF0D3B36),
+          Color(0xFF080E11),
         ],
         stops: [0.0, 1.0],
       ),
     );
   }
 
-  // Helper for a glowing effect on containers
   static BoxDecoration glowDecoration({Color? color, double opacity = 0.2, double blur = 40}) {
     return BoxDecoration(
       shape: BoxShape.circle,

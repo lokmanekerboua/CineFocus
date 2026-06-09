@@ -37,8 +37,6 @@ class MovieService {
     return {};
   }
 
-  // --- Movies ---
-
   Future<List<Movie>> getTrendingMovies() async {
     try {
       final response = await _dio.get('/trending/movie/day', queryParameters: _getAuthParams());
@@ -70,8 +68,6 @@ class MovieService {
       throw Exception('Failed to discover movies: ${e.message}');
     }
   }
-
-  // --- TV Shows ---
 
   Future<List<Movie>> getTVList(String type, {int page = 1}) async {
     try {
@@ -117,8 +113,6 @@ class MovieService {
       throw Exception('Failed to search TV shows: ${e.message}');
     }
   }
-
-  // --- Detailed Metadata ---
 
   Future<String?> getAgeRating(int id, bool isTV) async {
     try {
@@ -173,8 +167,6 @@ class MovieService {
       return [];
     }
   }
-
-  // --- Common ---
 
   Future<List<Movie>> searchMovies({required String query, int page = 1}) async {
     try {

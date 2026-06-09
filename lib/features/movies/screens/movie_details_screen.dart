@@ -30,7 +30,6 @@ class _MovieDetailsScreenState extends ConsumerState<MovieDetailsScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
-    // Fix: Using the expected Record argument for the family provider
     final trailerAsync = ref.watch(
       trailerKeyProvider((id: widget.movie.id, isTV: widget.movie.isTV)),
     );

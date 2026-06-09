@@ -152,7 +152,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // ── Inputs ──
                 TextField(
                   controller: _usernameCtrl,
                   enabled: !isAnyLoading,
@@ -208,7 +207,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // ── Sign Up button with Shadow ──
                 Container(
                   decoration: BoxDecoration(
                     boxShadow: [
@@ -232,7 +230,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // ── Divider ──
                 Row(
                   children: [
                     Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
@@ -245,7 +242,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // ── Google ──
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

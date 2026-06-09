@@ -47,7 +47,6 @@ class TVShowsNotifier extends AsyncNotifier<List<Movie>> {
       shows = await ref.read(tvServiceProvider).discoverTVShows(page: page, filters: filters);
     }
 
-    // Parallel fetch for age ratings to satisfy "detailed age" requirement
     final showsWithRatings = await Future.wait(shows.map((show) async {
       try {
         final rating = await ref.read(tvServiceProvider).getAgeRating(show.id, true);

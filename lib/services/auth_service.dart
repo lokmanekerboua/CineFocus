@@ -8,11 +8,8 @@ class AuthService {
   final _supabase = Supabase.instance.client;
 
   final _googleSignIn = GoogleSignIn(
-    // Web Client ID créé dans Google Cloud Console (type "Web application")
     serverClientId: '216300574155-g6kvrvkb6eglnq0a9ljhvsg6j5rbkqd5.apps.googleusercontent.com',
   );
-
-  // ── Google ────────────────────────────────────────────────────────────────
 
   Future<AuthResponse> signInWithGoogle() async {
     await _googleSignIn.signOut();
@@ -32,8 +29,6 @@ class AuthService {
     );
   }
 
-  // ── Email / Password ──────────────────────────────────────────────────────
-
   Future<AuthResponse> signInWithEmail({
     required String email,
     required String password,
@@ -50,8 +45,6 @@ class AuthService {
         password: password,
         data:     {'username': username},
       );
-
-  // ── Session ───────────────────────────────────────────────────────────────
 
   Future<void> signOut() async {
     await _googleSignIn.signOut();

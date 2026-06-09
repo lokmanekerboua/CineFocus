@@ -8,7 +8,6 @@ import 'features/main_screen.dart';
 import 'features/movies/screens/movie_details_screen.dart';
 import 'features/movies/models/movie_model.dart';
 
-/// A simple listenable that notifies GoRouter when the auth state changes.
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<AuthState> stream) {
     notifyListeners();

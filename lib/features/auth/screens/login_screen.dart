@@ -100,7 +100,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-                // ── Glowing Logo ──
                 Center(
                   child: Stack(
                     alignment: Alignment.center,
@@ -114,10 +113,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           blur: 80,
                         ),
                       ),
-                      Icon(
-                        Icons.movie_filter_rounded,
-                        size: 100,
-                        color: colorScheme.primary,
+                      Image.asset(
+                        'assets/clapperboard.png',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
                       ),
                     ],
                   ),
@@ -145,7 +145,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 60),
 
-                // ── Inputs ──
                 TextField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
@@ -188,7 +187,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // ── Sign In button with Shadow/Glow ──
                 Container(
                   height: 60,
                   decoration: BoxDecoration(
@@ -227,7 +225,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // ── Divider ──
                 Row(
                   children: [
                     Expanded(child: Divider(color: Colors.white.withOpacity(0.1))),
@@ -248,7 +245,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // ── Google ──
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

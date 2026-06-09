@@ -92,7 +92,6 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 40),
-              // Avatar with Glow
               Center(
                 child: Container(
                   padding: const EdgeInsets.all(4),
@@ -142,7 +141,6 @@ class ProfileScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 48),
 
-              // Info Cards
               _buildProfileItem(
                 icon: Icons.movie_outlined,
                 title: "My Watchlist",
@@ -157,7 +155,6 @@ class ProfileScreen extends ConsumerWidget {
 
               const SizedBox(height: 40),
 
-              // Sign Out Button
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -172,7 +169,6 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              // Crucial spacing for the floating bottom bar
               const SizedBox(height: 140),
             ],
           ),
