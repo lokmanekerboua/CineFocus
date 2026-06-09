@@ -28,10 +28,11 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(System.getenv("STORE_FILE") ?: "release.jks")
-            storePassword = System.getenv("STORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            val storeFilePath = System.getenv("STORE_FILE") ?: "release.jks"
+            storeFile = file(storeFilePath)
+            storePassword = System.getenv("STORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
         }
     }
 
@@ -40,6 +41,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
