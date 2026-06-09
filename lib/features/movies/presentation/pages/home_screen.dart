@@ -1,0 +1,260 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../providers/movie_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../main_screen.dart';
+import '../widgets/movie_card.dart';
+
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
+  final List<Map<String, dynamic>> _filterCategories = [
+    {'label': 'Popular', 'filter': {'sort_by': 'popularity.desc'}},
+    {'label': 'Top Rated', 'filter': {'vote_average.gte': 8.0, 'vote_count.gte': 1000}},
+    {'label': 'Newest', 'filter': {'sort_by': 'primary_release_date.desc'}},
+    {'label': 'Action', 'filter': {'with_genres': '28'}},
+    {'label': 'Comedy', 'filter': {'with_genres': '35'}},
+    {'label': 'Horror', 'filter': {'with_genres': '27'}},
+    {'label': 'Sci-Fi', 'filter': {'with_genres': '878'}},
+    {'label': 'Drama', 'filter': {'with_genres': '18'}},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 400) {
+      ref.read(moviesProvider.notifier).fetchNextPage();
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 600), () {
+      if (query.isNotEmpty) {
+        ref.read(movieFiltersProvider.notifier).state = {};
+      }
+      ref.read(searchQueryProvider.notifier).state = query;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final moviesAsync = ref.watch(moviesProvider);
+    final user = ref.watch(userProvider);
+    final activeFilters = ref.watch(movieFiltersProvider);
+    final String? avatarUrl = user?.userMetadata?['avatar_url'] ?? user?.userMetadata?['picture'];
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: AppTheme.moodyGradientBackground,
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              pinned: true,
+              floating: true,
+              snap: true,
+              expandedHeight: 140,
+              elevation: 0,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colorScheme.surface.withOpacity(0.8),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: _onSearchChanged,
+                        style: const TextStyle(color: Colors.white, fontSize: 16),
+                        decoration: InputDecoration(
+                          hintText: 'Search movies...',
+                          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                          prefixIcon: Icon(Icons.search, color: colorScheme.primary.withOpacity(0.5)),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => ref.read(navigationIndexProvider.notifier).setIndex(2),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withOpacity(0.2),
+                            blurRadius: 10,
+                          )
+                        ],
+                        border: Border.all(color: colorScheme.primary.withOpacity(0.3), width: 1.5),
+                      ),
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: colorScheme.surface,
+                        backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                        child: avatarUrl == null ? const Icon(Icons.person, color: Colors.white, size: 20) : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(60),
+                child: Container(
+                  height: 60,
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _filterCategories.length,
+                    itemBuilder: (context, index) {
+                      final item = _filterCategories[index];
+                      final bool isSelected = activeFilters.toString() == item['filter'].toString();
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: ChoiceChip(
+                          label: Text(item['label']),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            if (selected) {
+                              _searchController.clear();
+                              ref.read(searchQueryProvider.notifier).state = '';
+                              ref.read(movieFiltersProvider.notifier).state = item['filter'];
+                            }
+                          },
+                          backgroundColor: Colors.white.withOpacity(0.05),
+                          selectedColor: colorScheme.primary,
+                          labelStyle: TextStyle(
+                            color: isSelected ? Colors.black : Colors.white70,
+                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: isSelected ? colorScheme.primary : Colors.white.withOpacity(0.1),
+                            ),
+                          ),
+                          showCheckmark: false,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            moviesAsync.when(
+              data: (movies) {
+                if (movies.isEmpty) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.movie_outlined, size: 64, color: colorScheme.primary.withOpacity(0.2)),
+                          const SizedBox(height: 16),
+                          Text("No movies found", style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 18)),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.7,
+                      mainAxisSpacing: 20,
+                      crossAxisSpacing: 16,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return MovieCard(movie: movies[index]);
+                      },
+                      childCount: movies.length,
+                    ),
+                  ),
+                );
+              },
+              error: (e, _) => SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: Text("Error: ${e.toString()}", style: const TextStyle(color: Colors.red))),
+              ),
+              loading: () => SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(child: CircularProgressIndicator(color: colorScheme.primary)),
+              ),
+            ),
+            if (moviesAsync.isLoading && moviesAsync.hasValue)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Center(child: CircularProgressIndicator(color: colorScheme.primary)),
+                ),
+              ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 100), // Spacing for floating bottom bar
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

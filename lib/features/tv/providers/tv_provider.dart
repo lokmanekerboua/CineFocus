@@ -1,10 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../movies/services/movie_service.dart';
-import '../../movies/models/movie_model.dart';
-import '../../movies/providers/movie_provider.dart';
+import 'package:cine_focus/core/providers/common_providers.dart';
+import 'package:cine_focus/features/movies/domain/entities/movie.dart';
+import '../data/datasources/tv_remote_data_source.dart';
+import '../data/repositories/tv_repository_impl.dart';
+import '../domain/repositories/tv_repository.dart';
 
-final tvServiceProvider = Provider((ref) => MovieService());
+final tvRemoteDataSourceProvider = Provider<TVRemoteDataSource>((ref) {
+  return TVRemoteDataSourceImpl(ref.watch(dioProvider));
+});
+
+final tvRepositoryProvider = Provider<TVRepository>((ref) {
+  return TVRepositoryImpl(remoteDataSource: ref.watch(tvRemoteDataSourceProvider));
+});
 
 class TVSearchQueryNotifier extends Notifier<String> {
   @override
@@ -37,20 +45,20 @@ class TVShowsNotifier extends AsyncNotifier<List<Movie>> {
   }
 
   Future<List<Movie>> _fetchTVShows(int page, String query, Map<String, dynamic> filters) async {
+    final repository = ref.read(tvRepositoryProvider);
     List<Movie> shows;
     
     if (query.isNotEmpty) {
-      shows = await ref.read(tvServiceProvider).searchTVShows(query: query, page: page);
+      shows = await repository.searchTVShows(query: query, page: page);
     } else if (filters.containsKey('list_type')) {
-      shows = await ref.read(tvServiceProvider).getTVList(filters['list_type'], page: page);
+      shows = await repository.getTVList(filters['list_type'], page: page);
     } else {
-      shows = await ref.read(tvServiceProvider).discoverTVShows(page: page, filters: filters);
+      shows = await repository.discoverTVShows(page: page, filters: filters);
     }
 
-    // Parallel fetch for age ratings to satisfy "detailed age" requirement
     final showsWithRatings = await Future.wait(shows.map((show) async {
       try {
-        final rating = await ref.read(tvServiceProvider).getAgeRating(show.id, true);
+        final rating = await repository.getAgeRating(show.id);
         return show.copyWith(ageRating: rating);
       } catch (_) {
         return show;

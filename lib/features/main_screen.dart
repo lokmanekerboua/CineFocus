@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'movies/screens/home_screen.dart';
-import 'tv/screens/tv_home_screen.dart';
-import 'auth/screens/profile_screen.dart';
+import 'movies/presentation/pages/home_screen.dart';
+import 'tv/presentation/pages/tv_home_screen.dart';
+import 'auth/presentation/pages/profile_screen.dart';
 
 class NavigationIndexNotifier extends Notifier<int> {
   @override
@@ -28,7 +28,7 @@ class MainScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      extendBody: true, // Content flows behind the bar
+      extendBody: true,
       body: IndexedStack(
         index: selectedIndex,
         children: pages,

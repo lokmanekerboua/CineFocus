@@ -2,11 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'features/auth/screens/login_screen.dart';
-import 'features/auth/screens/signup_screen.dart';
+import 'features/auth/presentation/pages/login_screen.dart';
+import 'features/auth/presentation/pages/signup_screen.dart';
 import 'features/main_screen.dart';
-import 'features/movies/screens/movie_details_screen.dart';
-import 'features/movies/models/movie_model.dart';
+import 'features/movies/presentation/pages/movie_details_screen.dart';
+import 'features/movies/domain/entities/movie.dart';
 
 /// A simple listenable that notifies GoRouter when the auth state changes.
 class GoRouterRefreshStream extends ChangeNotifier {

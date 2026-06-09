@@ -1,23 +1,31 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/movie_service.dart';
-import '../models/movie_model.dart';
+import '../../../core/providers/common_providers.dart';
+import '../data/datasources/movie_remote_data_source.dart';
+import '../data/repositories/movie_repository_impl.dart';
+import '../domain/entities/movie.dart';
+import '../domain/repositories/movie_repository.dart';
 
-final movieServiceProvider = Provider((ref) => MovieService());
+final movieRemoteDataSourceProvider = Provider<MovieRemoteDataSource>((ref) {
+  return MovieRemoteDataSourceImpl(ref.watch(dioProvider));
+});
 
-// Simplified argument for detail-related providers
+final movieRepositoryProvider = Provider<MovieRepository>((ref) {
+  return MovieRepositoryImpl(remoteDataSource: ref.watch(movieRemoteDataSourceProvider));
+});
+
 typedef ContentArgs = ({int id, bool isTV});
 
 final trailerKeyProvider = FutureProvider.family<String?, ContentArgs>((ref, args) async {
-  return ref.watch(movieServiceProvider).getYoutubeTrailerKey(args.id, isTV: args.isTV);
+  return ref.watch(movieRepositoryProvider).getYoutubeTrailerKey(args.id, isTV: args.isTV);
 });
 
 final castProvider = FutureProvider.family<List<Map<String, dynamic>>, ContentArgs>((ref, args) async {
-  return ref.watch(movieServiceProvider).getCast(args.id, args.isTV);
+  return ref.watch(movieRepositoryProvider).getCast(args.id, args.isTV);
 });
 
 final similarContentProvider = FutureProvider.family<List<Movie>, ContentArgs>((ref, args) async {
-  return ref.watch(movieServiceProvider).getSimilar(args.id, args.isTV);
+  return ref.watch(movieRepositoryProvider).getSimilar(args.id, args.isTV);
 });
 
 class SearchQueryNotifier extends Notifier<String> {
@@ -51,17 +59,20 @@ class MoviesNotifier extends AsyncNotifier<List<Movie>> {
   }
 
   Future<List<Movie>> _fetchMovies(int page, String query, Map<String, dynamic> filters) async {
+    final repository = ref.read(movieRepositoryProvider);
     List<Movie> movies;
     if (query.isNotEmpty) {
-      movies = await ref.read(movieServiceProvider).searchMovies(query: query, page: page);
+      movies = await repository.searchMovies(query: query, page: page);
     } else {
-      movies = await ref.read(movieServiceProvider).discoverMovies(page: page, filters: filters);
+      movies = await repository.discoverMovies(page: page, filters: filters);
+      if (page == 1) {
+        movies.shuffle();
+      }
     }
 
-    // Fetch age ratings for movies as well for consistency
     final moviesWithRatings = await Future.wait(movies.map((movie) async {
       try {
-        final rating = await ref.read(movieServiceProvider).getAgeRating(movie.id, false);
+        final rating = await repository.getAgeRating(movie.id, false);
         return movie.copyWith(ageRating: rating);
       } catch (_) {
         return movie;
