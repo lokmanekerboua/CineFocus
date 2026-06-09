@@ -1,0 +1,106 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    environment: SUPABASE_URL
+    outputs:
+      version: ${{ steps.pubspec_version.outputs.VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Get version from pubspec
+        id: pubspec_version
+        run: |
+          VERSION=$(grep 'version: ' pubspec.yaml | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Validate Secrets
+        run: |
+          errors=0
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then echo "::error::KEYSTORE_BASE64 is missing"; errors=1; fi
+          if [ -z "${{ secrets.STORE_PASSWORD }}" ]; then echo "::error::STORE_PASSWORD is missing"; errors=1; fi
+          if [ -z "${{ secrets.KEY_ALIAS }}" ]; then echo "::error::KEY_ALIAS is missing"; errors=1; fi
+          if [ -z "${{ secrets.KEY_PASSWORD }}" ]; then echo "::error::KEY_PASSWORD is missing"; errors=1; fi
+          if [ $errors -eq 1 ]; then exit 1; fi
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Create .env file
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}" >> .env
+
+      - name: Decode Keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_B64" | openssl base64 -d -A > android/app/release.jks
+
+      - name: Build APK
+        run: flutter build apk --release
+        env:
+          STORE_FILE: release.jks
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Clean up keystore
+        if: always()
+        run: rm -f android/app/release.jks
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  release:
+    name: Create Tag and Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download APK Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+          path: .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          name: Release v${{ needs.build.outputs.version }}
+          draft: false
+          prerelease: false
+          files: app-release.apk
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
